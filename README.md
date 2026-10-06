@@ -1,3 +1,27 @@
+## What this version does differently
+
+Compared with the official [iloader](https://github.com/nab138/iloader) and with
+[rebelancap's Vision Pro fork](https://github.com/rebelancap/iloader):
+
+- **Apple Vision Pro over Wi-Fi on the current official iloader.** rebelancap's Vision Pro support
+  (branch `visionos-tunnel`) is merged on top of the official iloader 2.3.5, instead of the older
+  iloader that fork is based on. USB devices keep the official pairing.
+- **A Windows build.** GitHub Actions builds the Windows installer for this version.
+- **Increased Memory Limit on everything it signs.** Every way of installing (your own IPA,
+  SideStore, LiveContainer, on iPhone, iPad or Vision Pro) asks for the
+  `com.apple.developer.kernel.increased-memory-limit` capability on all App IDs, which apps such as
+  emulators need. If Apple refuses it for the account, the app is installed normally instead of
+  failing.
+- **Pairing file for visionOS SideStore.** *Place* writes the pairing as `rp_pairing_file.plist`,
+  the name SideStore on visionOS loads, next to the iOS name; exporting for a Vision Pro uses that
+  name too.
+- **Fixes:** pairing with a Vision Pro no longer closes the app silently on Windows (larger thread
+  stacks), and a pairing the Vision Pro has rejected is discarded and the code is asked for again,
+  instead of retrying forever.
+
+The Vision Pro work is in the `visionos-windows` branch (`visionos-tunnel-windows` is the earlier
+build on rebelancap's base).
+
 > [!NOTE]
 > **iLoader-VisionPro** is a fork of **[iloader](https://github.com/nab138/iloader) by
 > [nab138](https://github.com/nab138)**, with the Apple Vision Pro (Wi-Fi) support of
