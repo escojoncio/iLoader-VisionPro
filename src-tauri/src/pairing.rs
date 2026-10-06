@@ -226,7 +226,18 @@ pub async fn place_pairing_cmd(
             .ok_or_else(|| AppError::RemotePairing("Vision Pro has no IP address".into()))?;
         let ips = vision::live_ips(&device.info.name, &ip);
         let mut session = vision::VisionSession::connect_any(&ips, &device.pairing).await?;
-        vision::place_into(&mut session, &bundle_id, &path, &device.pairing).await?;
+        // A Vision Pro pairing is an RP pairing, and the visionOS SideStore builds boot
+        // from `rp_pairing_file.plist`. The app list carries the iOS file names (e.g.
+        // ALTPairingFile.mobiledevicepairing), so also write the RP name alongside it in
+        // the same directory; whichever the app reads, it finds the right file.
+        let rp_path = match path.rsplit_once('/') {
+            Some((dir, _)) => format!("{dir}/rp_pairing_file.plist"),
+            None => "rp_pairing_file.plist".to_string(),
+        };
+        vision::place_into(&mut session, &bundle_id, &rp_path, &device.pairing).await?;
+        if rp_path != path {
+            vision::place_into(&mut session, &bundle_id, &path, &device.pairing).await?;
+        }
         return Ok(());
     }
 
@@ -253,7 +264,11 @@ pub async fn export_pairing_cmd(
         .dialog()
         .file()
         .add_filter("Pairing File", &["plist", "mobiledevicepairing"])
-        .set_file_name("pairingFile.plist")
+        .set_file_name(if device.info.transport == DeviceTransport::Vision {
+            "rp_pairing_file.plist"
+        } else {
+            "pairingFile.plist"
+        })
         .set_title("Export Pairing File")
         .blocking_save_file();
 
