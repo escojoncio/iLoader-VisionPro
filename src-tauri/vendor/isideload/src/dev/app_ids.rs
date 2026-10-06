@@ -151,6 +151,28 @@ pub trait AppIdsApi {
         Ok(())
     }
 
+    /// Deletes a provisioning profile, so the next download makes a new one. Apple keeps
+    /// handing out the same team profile for an App ID while it is valid, even when a device
+    /// registered after it was made is missing from it.
+    async fn delete_provisioning_profile(
+        &mut self,
+        team: &DeveloperTeam,
+        provisioning_profile_id: &str,
+        device_type: impl Into<Option<DeveloperDeviceType>> + Send,
+    ) -> Result<(), Report> {
+        let body = plist!(dict {
+            "teamId": &team.team_id,
+            "provisioningProfileId": provisioning_profile_id,
+        });
+
+        self.developer_session()
+            .send_dev_request_no_response(&dev_url("deleteProvisioningProfile", device_type), body)
+            .await
+            .context("Failed to delete provisioning profile")?;
+
+        Ok(())
+    }
+
     async fn download_team_provisioning_profile(
         &mut self,
         team: &DeveloperTeam,

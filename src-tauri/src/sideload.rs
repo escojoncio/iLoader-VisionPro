@@ -178,6 +178,9 @@ async fn sideload_vision(
         .ensure_device_registered(&team, &device.info.name, &udid, None)
         .await?;
 
+    // The profile has to list the Vision Pro: one made earlier for the same App ID from another
+    // device (an iPhone) is replaced with a new one.
+    sideloader.get_mut().set_target_device(Some(udid.clone()));
     let (signed_path, special) = match sideloader
         .get_mut()
         .sign_app(
@@ -203,6 +206,8 @@ async fn sideload_vision(
         }
         Err(e) => return Err(e.into()),
     };
+
+    sideloader.get_mut().set_target_device(None);
 
     // Fresh tunnel for the install itself (signing above is network-bound and could
     // otherwise idle out an earlier tunnel). Re-read the live addresses too — signing

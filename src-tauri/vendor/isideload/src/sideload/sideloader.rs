@@ -34,6 +34,8 @@ pub struct Sideloader<C: MaxCertsCallback> {
     //extensions_behavior: ExtensionsBehavior,
     delete_app_after_install: bool,
     team: Option<DeveloperTeam>,
+    /// The device the next signing is for; its profile must list it (see `profile_for_device`).
+    target_udid: Option<String>,
 }
 
 impl<C: MaxCertsCallback> Sideloader<C> {
@@ -60,7 +62,62 @@ impl<C: MaxCertsCallback> Sideloader<C> {
             //extensions_behavior,
             delete_app_after_install,
             team: None,
+            target_udid: None,
         }
+    }
+
+    /// The device the next `sign_app` calls are for. When set, a provisioning profile that does
+    /// not list this device is deleted and downloaded again (see `profile_for_device`).
+    pub fn set_target_device(&mut self, udid: Option<String>) {
+        self.target_udid = udid;
+    }
+
+    /// Downloads the team profile for an App ID and makes sure it covers the target device.
+    ///
+    /// Apple returns the existing profile of an App ID while it is valid. An App ID first used
+    /// from another device (e.g. an iPhone, through SideStore) has a profile made before this
+    /// device was registered, without it: installing then fails with 0xe8008015 ("A valid
+    /// provisioning profile for this executable was not found"). Such a profile is deleted and
+    /// a new one, made now with every registered device, is downloaded.
+    async fn profile_for_device(
+        &mut self,
+        team: &DeveloperTeam,
+        app_id: &crate::dev::app_ids::AppId,
+    ) -> Result<Profile, Report> {
+        let profile = self
+            .dev_session
+            .download_team_provisioning_profile(team, app_id, None)
+            .await?;
+        let Some(udid) = self.target_udid.clone() else {
+            return Ok(profile);
+        };
+        let (covers, platforms, count) = profile_covers(&profile, &udid);
+        info!(
+            "Profile {} for {}: {} devices, platforms {:?}, covers this device: {}",
+            profile.provisioning_profile_id, app_id.identifier, count, platforms, covers
+        );
+        if covers {
+            return Ok(profile);
+        }
+        info!("The profile does not list this device: making a new one");
+        if let Err(e) = self
+            .dev_session
+            .delete_provisioning_profile(team, &profile.provisioning_profile_id, None)
+            .await
+        {
+            tracing::warn!("Could not delete the old profile: {e:?}");
+            return Ok(profile);
+        }
+        let fresh = self
+            .dev_session
+            .download_team_provisioning_profile(team, app_id, None)
+            .await?;
+        let (covers, platforms, count) = profile_covers(&fresh, &udid);
+        info!(
+            "New profile {} for {}: {} devices, platforms {:?}, covers this device: {}",
+            fresh.provisioning_profile_id, app_id.identifier, count, platforms, covers
+        );
+        Ok(fresh)
     }
 
     /// Sign the app at the provided path and return the path to the signed app bundle (in a temp dir). To sign and install, see [`Self::install_app`].
@@ -162,10 +219,7 @@ impl<C: MaxCertsCallback> Sideloader<C> {
             .await
             .context("Failed to modify app bundle")?;
 
-        let main_provisioning_profile = self
-            .dev_session
-            .download_team_provisioning_profile(&team, &main_app_id, None)
-            .await?;
+        let main_provisioning_profile = self.profile_for_device(&team, &main_app_id).await?;
 
         let mut provisioning_profiles: Vec<(String, Profile, Dictionary)> = Vec::new();
 
@@ -176,8 +230,7 @@ impl<C: MaxCertsCallback> Sideloader<C> {
             let bundle_id = id.identifier.clone();
 
             let profile = self
-                .dev_session
-                .download_team_provisioning_profile(&team, &id, None)
+                .profile_for_device(&team, &id)
                 .await
                 .context(format!(
                     "Failed to download provisioning profile for {}",
@@ -252,6 +305,7 @@ impl<C: MaxCertsCallback> Sideloader<C> {
             .ensure_device_registered(&team, &device_info.name, &device_info.udid, None)
             .await?;
 
+        self.target_udid = Some(device_info.udid.clone());
         let (signed_app_path, special_app) = self
             .sign_app(
                 app_path,
@@ -326,4 +380,34 @@ impl<C: MaxCertsCallback> Sideloader<C> {
     pub fn get_email(&self) -> &str {
         &self.apple_email
     }
+}
+
+/// Whether a provisioning profile lists the device, the platforms it is for and how many
+/// devices it lists. The profile is a signed CMS message with the plist inside it.
+fn profile_covers(profile: &Profile, udid: &str) -> (bool, Vec<String>, usize) {
+    let data: &[u8] = profile.encoded_profile.as_ref();
+    let start = data.windows(5).position(|w| w == b"<?xml");
+    let end = data.windows(8).rposition(|w| w == b"</plist>");
+    let (Some(start), Some(end)) = (start, end) else {
+        return (true, Vec::new(), 0);
+    };
+    let Ok(dict) = plist::from_bytes::<Dictionary>(&data[start..end + 8]) else {
+        return (true, Vec::new(), 0);
+    };
+    let platforms = dict
+        .get("Platform")
+        .and_then(|v| v.as_array())
+        .map(|a| a.iter().filter_map(|v| v.as_string().map(str::to_string)).collect())
+        .unwrap_or_default();
+    let devices: Vec<String> = dict
+        .get("ProvisionedDevices")
+        .and_then(|v| v.as_array())
+        .map(|a| a.iter().filter_map(|v| v.as_string().map(str::to_string)).collect())
+        .unwrap_or_default();
+    if devices.is_empty() {
+        // No device list (e.g. a profile for all devices): nothing to check.
+        return (true, platforms, 0);
+    }
+    let covers = devices.iter().any(|d| d.eq_ignore_ascii_case(udid));
+    (covers, platforms, devices.len())
 }
