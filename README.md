@@ -37,7 +37,16 @@ build on rebelancap's base).
 > [isideload](https://github.com/nab138/isideload), to [rebelancap](https://github.com/rebelancap)
 > for bringing it to the Apple Vision Pro, and to [jkcoxson](https://github.com/jkcoxson) for
 > [idevice](https://github.com/jkcoxson/idevice). This fork is not the official iloader: please
-> report its problems here, not to the original project. The original README follows.
+> report its problems here, not to the original project.
+
+---
+
+## ⬇️ The original iloader README starts here
+
+*Everything below this line is the README of the official [iloader](https://github.com/nab138/iloader)
+by [nab138](https://github.com/nab138), unchanged. It describes the official app, not this version.*
+
+---
 
 <a href="https://iloader.app">
   <picture align="left" >
