@@ -1,3 +1,19 @@
+> [!NOTE]
+> **iloaderVP** is a fork of **[iloader](https://github.com/nab138/iloader) by
+> [nab138](https://github.com/nab138)**, with the Apple Vision Pro (Wi-Fi) support of
+> **[rebelancap's iloader fork](https://github.com/rebelancap/iloader)** (branch
+> `visionos-tunnel`) on top of the official release, built for Windows. The Vision Pro work is in
+> the `visionos-windows` branch.
+>
+> **The changes in this fork were written entirely by Claude (Anthropic's AI), following all the
+> instructions and ideas of the repository owner.**
+>
+> **Thanks** to [nab138](https://github.com/nab138) for iloader and
+> [isideload](https://github.com/nab138/isideload), to [rebelancap](https://github.com/rebelancap)
+> for bringing it to the Apple Vision Pro, and to [jkcoxson](https://github.com/jkcoxson) for
+> [idevice](https://github.com/jkcoxson/idevice). This fork is not the official iloader: please
+> report its problems here, not to the original project. The original README follows.
+
 <a href="https://iloader.app">
   <picture align="left" >
     <source media="(prefers-color-scheme: dark)" srcset="/iloader.svg">
