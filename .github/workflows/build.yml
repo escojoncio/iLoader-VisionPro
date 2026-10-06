@@ -1,18 +1,16 @@
 name: "Build iloader"
 
+# GitHub Actions minutes: this only builds when asked for - by hand (Actions > Build iloader >
+# Run workflow) or for a push whose commit message has [build] in it.
 on:
   push:
     branches:
       - "*"
-  pull_request:
-    branches:
-      - "*"
   workflow_dispatch:
-  release:
-    types: [published]
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build]')
     permissions:
       contents: write
     env:
