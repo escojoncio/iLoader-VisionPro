@@ -950,8 +950,23 @@ impl VisionSession {
             .connect(&mut pf, || async { "000000".to_string() })
             .await
             .map_err(|e| match e {
-                // The socket died mid-exchange — a dozing headset, not a verdict on
-                // the pairing.
+                // The TCP connect above just succeeded, so the headset is awake. If it
+                // then slams the connection (RST) in the middle of pair-verify, that is
+                // visionOS refusing a host identity it no longer trusts — treat it as a
+                // rejected pairing so it gets dropped and the user is asked for the code
+                // again, instead of retrying the dead pairing in a tight loop.
+                idevice::IdeviceError::Socket(io)
+                    if matches!(
+                        io.kind(),
+                        std::io::ErrorKind::ConnectionReset | std::io::ErrorKind::ConnectionAborted
+                    ) =>
+                {
+                    AppError::VisionPairingRejected(format!(
+                        "the Vision Pro closed the connection during pair-verify ({ip}:{RSD_PORT}): {io}"
+                    ))
+                }
+                // Any other socket failure mid-exchange — a dozing headset, not a
+                // verdict on the pairing.
                 idevice::IdeviceError::Socket(io) => {
                     connect_err("Lost the Vision Pro during pair-verify", ip, RSD_PORT, io)
                 }
