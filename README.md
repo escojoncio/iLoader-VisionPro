@@ -1,5 +1,5 @@
 > [!NOTE]
-> **iloaderVP** is a fork of **[iloader](https://github.com/nab138/iloader) by
+> **iLoader-VisionPro** is a fork of **[iloader](https://github.com/nab138/iloader) by
 > [nab138](https://github.com/nab138)**, with the Apple Vision Pro (Wi-Fi) support of
 > **[rebelancap's iloader fork](https://github.com/rebelancap/iloader)** (branch
 > `visionos-tunnel`) on top of the official release, built for Windows. The Vision Pro work is in
