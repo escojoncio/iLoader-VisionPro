@@ -108,17 +108,43 @@ pub async fn sideload(
 
     let mut sideloader = SideloaderGuard::take(&sideloader_state)?;
 
-    let special = sideloader
+    // Always request the Increased Memory Limit entitlement. If Apple refuses the
+    // capability for this account, fall back to a normal install instead of failing.
+    let special = match sideloader
         .get_mut()
         .install_app(
             &provider,
-            app_path.into(),
-            false,
+            PathBuf::from(&app_path),
+            INCREASED_MEMORY_LIMIT,
             None::<fn(f32) -> std::future::Ready<()>>,
         )
-        .await?;
+        .await
+    {
+        Ok(special) => special,
+        Err(e) if is_memory_limit_error(&e) => {
+            tracing::warn!("Increased Memory Limit refused, installing without it: {e:?}");
+            sideloader
+                .get_mut()
+                .install_app(
+                    &provider,
+                    PathBuf::from(&app_path),
+                    false,
+                    None::<fn(f32) -> std::future::Ready<()>>,
+                )
+                .await?
+        }
+        Err(e) => return Err(e.into()),
+    };
 
     Ok(special)
+}
+
+/// Every app signed by this build gets the Increased Memory Limit entitlement
+/// (`com.apple.developer.kernel.increased-memory-limit`) on all of its App IDs.
+const INCREASED_MEMORY_LIMIT: bool = true;
+
+fn is_memory_limit_error(e: &impl std::fmt::Debug) -> bool {
+    format!("{e:?}").to_lowercase().contains("increased memory")
 }
 
 /// Sign + install onto a Vision Pro over Wi-Fi. Signing reuses isideload's account
@@ -152,15 +178,31 @@ async fn sideload_vision(
         .ensure_device_registered(&team, &device.info.name, &udid, None)
         .await?;
 
-    let (signed_path, special) = sideloader
+    let (signed_path, special) = match sideloader
         .get_mut()
         .sign_app(
-            app_path.into(),
-            Some(team),
-            false,
+            PathBuf::from(&app_path),
+            Some(team.clone()),
+            INCREASED_MEMORY_LIMIT,
             None::<fn(f32) -> std::future::Ready<()>>,
         )
-        .await?;
+        .await
+    {
+        Ok(signed) => signed,
+        Err(e) if is_memory_limit_error(&e) => {
+            tracing::warn!("Increased Memory Limit refused, signing without it: {e:?}");
+            sideloader
+                .get_mut()
+                .sign_app(
+                    PathBuf::from(&app_path),
+                    Some(team),
+                    false,
+                    None::<fn(f32) -> std::future::Ready<()>>,
+                )
+                .await?
+        }
+        Err(e) => return Err(e.into()),
+    };
 
     // Fresh tunnel for the install itself (signing above is network-bound and could
     // otherwise idle out an earlier tunnel). Re-read the live addresses too — signing
