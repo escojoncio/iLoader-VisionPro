@@ -4,9 +4,8 @@
 > **[rebelancap's iloader fork](https://github.com/rebelancap/iloader)** (branch
 > `visionos-tunnel`) on top of the official release, built for Windows.
 >
-> **The changes in this fork were written entirely by Claude (Anthropic's AI), following all the
-> instructions and ideas of the repository owner.**
-> **The owner of this repository guided all of this work: every idea, and every instruction about what Claude had to do, came from them.**
+> **The changes in this fork were written by Claude (Anthropic's AI); the owner of this repository
+> contributed ideas on how some things could be adapted.**
 >
 > **Thanks** to [nab138](https://github.com/nab138) for iloader and
 > [isideload](https://github.com/nab138/isideload), to [rebelancap](https://github.com/rebelancap)
