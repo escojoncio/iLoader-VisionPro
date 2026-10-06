@@ -5,8 +5,9 @@
 > `visionos-tunnel`) on top of the official release, built for Windows. The Vision Pro work is in
 > the `visionos-windows` branch.
 >
-> **The changes in this fork were written by Claude (Anthropic's AI); the owner of this repository
-> contributed ideas on how some things could be adapted.**
+> **The changes in this fork were written by Claude (Anthropic's AI), building on the great work
+> of the projects credited below; the owner of this repository contributed ideas on how some
+> things could be adapted.**
 >
 > **Thanks** to [nab138](https://github.com/nab138) for iloader and
 > [isideload](https://github.com/nab138/isideload), to [rebelancap](https://github.com/rebelancap)
