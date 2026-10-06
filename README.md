@@ -15,6 +15,10 @@ Compared with the official [iloader](https://github.com/nab138/iloader) and with
 - **Pairing file for visionOS SideStore.** *Place* writes the pairing as `rp_pairing_file.plist`,
   the name SideStore on visionOS loads, next to the iOS name; exporting for a Vision Pro uses that
   name too.
+- **One App ID for the same app on iPhone and Vision Pro.** If the App ID was first used from
+  another device (for example StikDebug installed on an iPhone with SideStore), Apple's profile
+  for it does not list the Vision Pro and the install fails (0xe8008015); this version replaces
+  that profile with a new one that does, so the app does not need an App ID of its own.
 - **Fixes:** pairing with a Vision Pro no longer closes the app silently on Windows (larger thread
   stacks), and a pairing the Vision Pro has rejected is discarded and the code is asked for again,
   instead of retrying forever.
