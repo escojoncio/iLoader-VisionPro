@@ -171,6 +171,21 @@ jobs:
           path: |
             ${{ github.workspace }}/src-tauri/target/release/bundle/**/*.exe
 
+      # Also publish the Windows installer as a GitHub Release, so there is always a
+      # ready-to-download build on the repository page (artifacts expire and need a login).
+      - name: Publish Windows installer as a release
+        if: matrix.platform == 'windows-latest' && github.event_name != 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: windows-build-${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          name: iLoader-VisionPro para Windows (build ${{ github.run_number }})
+          body: |
+            Instalador de Windows compilado automáticamente desde la rama `${{ github.ref_name }}` (commit ${{ github.sha }}).
+          make_latest: "true"
+          files: |
+            src-tauri/target/release/bundle/nsis/*.exe
+
   mark-latest:
     needs: build
     if: github.event_name == 'release'
