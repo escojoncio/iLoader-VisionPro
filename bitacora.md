@@ -3,7 +3,7 @@
 Fork de iloader (nab138) con el soporte Wi-Fi de Apple Vision Pro de la rama `visionos-tunnel` de rebelancap, aplicado sobre el iloader oficial 2.3.5 y compilado para Windows.
 
 ## Ramas
-- `visionos-windows`: **rama de trabajo** (Vision Pro sobre iloader 2.3.5). Último commit funcional: `e2fc39e` (publica el instalador de Windows como GitHub Release).
+- `visionos-windows`: **rama de trabajo** (Vision Pro sobre iloader 2.3.5). Último commit funcional: `1192b17` (publica el instalador de Windows como GitHub Release).
 - `visionos-tunnel-windows`: build anterior sobre la base de rebelancap (histórico).
 - `main`: iloader oficial + README del fork; no lleva el código de Vision Pro.
 
@@ -19,7 +19,7 @@ Funciona:
 - `src-tauri/vendor/isideload/src/sideload/sideloader.rs`: al firmar para un dispositivo, `profile_for_device`: si el perfil descargado no lista el UDID, `delete_provisioning_profile` y nueva descarga; log de dispositivos y plataformas del perfil.
 - `src-tauri/vendor/isideload/src/dev/app_ids.rs`: borrado de perfiles (`deleteProvisioningProfile`).
 - `src-tauri/src/sideload.rs`: `set_target_device` antes de firmar.
-- Emparejamiento visionOS (`69142a6`, `9fccdba`): nombre `rp_pairing_file.plist`; reset durante pair-verify tratado como rechazo.
+- Emparejamiento visionOS (`c5f5e37`, `2333fac`): nombre `rp_pairing_file.plist`; reset durante pair-verify tratado como rechazo.
 - `.github/workflows/build.yml`: compila solo con `[build]` en el commit o *Run workflow*; sin job programado de descargas; publica el instalador de Windows como Release.
 
 ## Notas
