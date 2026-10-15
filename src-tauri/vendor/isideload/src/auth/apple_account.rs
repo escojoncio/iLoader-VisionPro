@@ -94,6 +94,7 @@ enum SmsSendOutcome {
     ServiceError(SMSTwoFactorError),
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct SmsChallengeResponse {
@@ -106,6 +107,7 @@ struct SmsChallengeResponse {
     security_code: SmsSecurityCode,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct SmsSecurityCode {
@@ -597,23 +599,25 @@ impl AppleAccount {
             return Ok(SmsSendOutcome::ServiceError(error));
         }
 
-        if status == 412
-            && let Ok(challenge) = serde_json::from_str::<SmsChallengeResponse>(text)
-            && challenge.mode == "sms"
-            && challenge.challenge_type == "verification"
-            && challenge.authentication_type == "hsa2"
-            && challenge.trusted_phone_number.id == requested_number_id
-            && challenge
-                .trusted_phone_numbers
+        // 412 = Apple already has an active verification challenge for this account (the code
+        // is usually already on its way). Earlier this was only accepted when every field of
+        // the reply matched exactly; replies that differ slightly (another phone id, missing
+        // fields) made the login fail although the SMS had arrived. Accept any 412 whose
+        // challenge is not locked/throttled, and let the user type the code.
+        if status == 412 {
+            let v: serde_json::Value = serde_json::from_str(text).unwrap_or_default();
+            let sc = &v["securityCode"];
+            let blocked = ["tooManyCodesSent", "tooManyCodesValidated", "securityCodeLocked", "securityCodeCooldown"]
                 .iter()
-                .any(|number| number.id == requested_number_id)
-            && challenge.security_code.length == 6
-            && !challenge.security_code.too_many_codes_sent
-            && !challenge.security_code.too_many_codes_validated
-            && !challenge.security_code.security_code_locked
-            && !challenge.security_code.security_code_cooldown
-        {
-            return Ok(SmsSendOutcome::ActiveChallenge);
+                .any(|k| sc[*k].as_bool() == Some(true));
+            if !blocked {
+                if let Some(other) = v["trustedPhoneNumber"]["id"].as_u64()
+                    && other != requested_number_id as u64
+                {
+                    warn!("SMS 2FA challenge active for phone id {other} (requested {requested_number_id})");
+                }
+                return Ok(SmsSendOutcome::ActiveChallenge);
+            }
         }
 
         bail!(
