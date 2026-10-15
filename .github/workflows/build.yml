@@ -20,9 +20,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # visionos-windows: solo Windows (compilacion para Vision Pro por Wi-Fi)
+          # Vision Pro por Wi-Fi: instalador de Windows y variante de macOS (universal)
           - platform: "windows-latest"
             args: ""
+          - platform: "macos-latest"
+            args: "--target universal-apple-darwin"
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -177,14 +179,27 @@ jobs:
         if: matrix.platform == 'windows-latest' && github.event_name != 'release'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: windows-build-${{ github.run_number }}
+          tag_name: build-${{ github.run_number }}
           target_commitish: ${{ github.sha }}
-          name: iLoader-VisionPro para Windows (build ${{ github.run_number }})
+          name: iLoader-VisionPro (build ${{ github.run_number }})
           body: |
-            Instalador de Windows compilado automáticamente desde la rama `${{ github.ref_name }}` (commit ${{ github.sha }}).
+            Compilado automáticamente desde la rama `${{ github.ref_name }}` (commit ${{ github.sha }}).
+            - Windows: `*_x64-setup.exe`
+            - macOS (Apple Silicon e Intel): `*.dmg` (sin firma de Apple; ver README)
           make_latest: "true"
           files: |
             src-tauri/target/release/bundle/nsis/*.exe
+
+      - name: Publish macOS DMG as a release
+        if: matrix.platform == 'macos-latest' && github.event_name != 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          name: iLoader-VisionPro (build ${{ github.run_number }})
+          make_latest: "true"
+          files: |
+            src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
 
   mark-latest:
     needs: build
