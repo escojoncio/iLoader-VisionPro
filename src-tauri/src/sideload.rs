@@ -198,7 +198,7 @@ async fn sideload_vision(
         Ok(signed) => signed,
         Err(e) if is_memory_limit_error(&e) => {
             tracing::warn!("Increased Memory Limit refused, signing without it: {e:?}");
-            sideloader
+            let retry = sideloader
                 .get_mut()
                 .sign_app(
                     PathBuf::from(&app_path),
@@ -208,9 +208,19 @@ async fn sideload_vision(
                     Some(&device.pairing),
                     Some(udid.as_str()),
                 )
-                .await?
+                .await;
+            match retry {
+                Ok(signed) => signed,
+                Err(e) => {
+                    sideloader.get_mut().set_target_device(None);
+                    return Err(e.into());
+                }
+            }
         }
-        Err(e) => return Err(e.into()),
+        Err(e) => {
+            sideloader.get_mut().set_target_device(None);
+            return Err(e.into());
+        }
     };
 
     sideloader.get_mut().set_target_device(None);
