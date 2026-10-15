@@ -121,6 +121,8 @@ impl<C: MaxCertsCallback> Sideloader<C> {
     }
 
     /// Sign the app at the provided path and return the path to the signed app bundle (in a temp dir). To sign and install, see [`Self::install_app`].
+    /// `pairing_file` is the optional pairing file to be encrypted and placed in the bundle if installing AltStore.
+    /// `device_udid` is the optional device UDID to be used for AltStore pairing file injection.
     pub async fn sign_app<F, Fut>(
         &mut self,
         app_path: PathBuf,
@@ -128,6 +130,8 @@ impl<C: MaxCertsCallback> Sideloader<C> {
         // this will be replaced with proper entitlement handling later
         increased_memory_limit: bool,
         progress_callback: Option<F>,
+        pairing_file: Option<&[u8]>,
+        device_udid: Option<&str>,
     ) -> Result<(PathBuf, Option<SpecialApp>), Report>
     where
         F: Fn(f32) -> Fut,
@@ -215,9 +219,15 @@ impl<C: MaxCertsCallback> Sideloader<C> {
 
         info!("App IDs configured");
 
-        app.apply_special_app_behavior(&special, &group_identifier, &cert_identity)
-            .await
-            .context("Failed to modify app bundle")?;
+        app.apply_special_app_behavior(
+            &special,
+            &group_identifier,
+            &cert_identity,
+            pairing_file,
+            device_udid,
+        )
+        .await
+        .context("Failed to modify app bundle")?;
 
         let main_provisioning_profile = self.profile_for_device(&team, &main_app_id).await?;
 
@@ -270,7 +280,7 @@ impl<C: MaxCertsCallback> Sideloader<C> {
             &mut app,
             &cert_identity,
             &main_provisioning_profile,
-            &provisioning_profiles,
+            &mut provisioning_profiles,
             &special,
             &team,
             progress_callback,
@@ -286,6 +296,8 @@ impl<C: MaxCertsCallback> Sideloader<C> {
     #[cfg(feature = "install")]
     /// Sign and install an app to a device.
     /// This is more intended to be a helper function for simple use cases, for more complex scenarios you should call `sign_app` and `install_app` separately.
+    /// `pairing_file` is the optional pairing file to be encrypted and placed in the bundle if installing AltStore.
+    /// `device_udid` is the optional device UDID to be used for AltStore pairing file injection.
     pub async fn install_app<F, Fut>(
         &mut self,
         device_provider: &impl IdeviceProvider,
@@ -293,6 +305,7 @@ impl<C: MaxCertsCallback> Sideloader<C> {
         // this is gross but will be replaced with proper entitlement handling later
         increased_memory_limit: bool,
         progress_callback: Option<F>,
+        pairing_file: Option<&[u8]>,
     ) -> Result<Option<SpecialApp>, Report>
     where
         F: Fn(f32) -> Fut,
@@ -312,6 +325,8 @@ impl<C: MaxCertsCallback> Sideloader<C> {
                 Some(team),
                 increased_memory_limit,
                 progress_callback,
+                pairing_file,
+                Some(&device_info.udid),
             )
             .await?;
 

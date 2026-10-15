@@ -117,6 +117,7 @@ pub async fn sideload(
             PathBuf::from(&app_path),
             INCREASED_MEMORY_LIMIT,
             None::<fn(f32) -> std::future::Ready<()>>,
+            Some(&device.pairing),
         )
         .await
     {
@@ -130,6 +131,7 @@ pub async fn sideload(
                     PathBuf::from(&app_path),
                     false,
                     None::<fn(f32) -> std::future::Ready<()>>,
+                    Some(&device.pairing),
                 )
                 .await?
         }
@@ -188,6 +190,8 @@ async fn sideload_vision(
             Some(team.clone()),
             INCREASED_MEMORY_LIMIT,
             None::<fn(f32) -> std::future::Ready<()>>,
+            Some(&device.pairing),
+            Some(udid.as_str()),
         )
         .await
     {
@@ -201,6 +205,8 @@ async fn sideload_vision(
                     Some(team),
                     false,
                     None::<fn(f32) -> std::future::Ready<()>>,
+                    Some(&device.pairing),
+                    Some(udid.as_str()),
                 )
                 .await?
         }

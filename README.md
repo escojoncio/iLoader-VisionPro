@@ -4,9 +4,14 @@ Compared with the official [iloader](https://github.com/nab138/iloader) and with
 [rebelancap's Vision Pro fork](https://github.com/rebelancap/iloader):
 
 - **Apple Vision Pro over Wi-Fi on the current official iloader.** rebelancap's Vision Pro support
-  (branch `visionos-tunnel`) is merged on top of the official iloader 2.3.5, instead of the older
+  (branch `visionos-tunnel`) is merged on top of the official iloader 2.3.8 (isideload 0.4.6, with its fixes for Apple's new
+  2FA/SMS answers and anisette), instead of the older
   iloader that fork is based on. USB devices keep the official pairing.
-- **A Windows build.** GitHub Actions builds the Windows installer for this version.
+- **Windows and macOS builds.** GitHub Actions builds the Windows installer and a universal macOS
+  `.dmg` (Apple Silicon and Intel), published together in the repository's Releases. The macOS
+  build is not signed with an Apple Developer ID: open it with right-click → *Open* the first time
+  (or run `xattr -cr /Applications/iloader.app`), and allow *Local Network* access when macOS asks,
+  or the Vision Pro cannot be found.
 - **Increased Memory Limit on everything it signs.** Every way of installing (your own IPA,
   SideStore, LiveContainer, on iPhone, iPad or Vision Pro) asks for the
   `com.apple.developer.kernel.increased-memory-limit` capability on all App IDs, which apps such as
@@ -30,7 +35,7 @@ build on rebelancap's base).
 > **iLoader-VisionPro** is a fork of **[iloader](https://github.com/nab138/iloader) by
 > [nab138](https://github.com/nab138)**, with the Apple Vision Pro (Wi-Fi) support of
 > **[rebelancap's iloader fork](https://github.com/rebelancap/iloader)** (branch
-> `visionos-tunnel`) on top of the official release, built for Windows.
+> `visionos-tunnel`) on top of the official release, built for Windows and macOS.
 >
 > **The changes in this fork were written by Claude (Anthropic's AI), building on the great work
 > of the projects credited below; the owner of this repository contributed ideas on how some
