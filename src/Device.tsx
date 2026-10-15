@@ -75,6 +75,9 @@ export const Device = ({
   const [visionStatus, setVisionStatus] = useState<VisionStatus>(null);
   const [visionCode, setVisionCode] = useState("");
 
+  // Devices already auto-selected once: a failed automatic connection must not be
+  // retried on every re-render/refresh (that looped forever on an unreachable Vision Pro).
+  const autoSelected = useRef<Set<string>>(new Set());
   const listingDevices = useRef<boolean>(false);
   const pairingRequestId = useRef<number>(0);
   const pairingModalTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -246,8 +249,12 @@ export const Device = ({
             .then((results) =>
               results.filter((d): d is DeviceInfo => d !== null),
             );
-          if (devicesWithPairing.length > 0) {
-            selectDevice(devicesWithPairing[0]);
+          const candidate = devicesWithPairing.find(
+            (d) => !autoSelected.current.has(d.id),
+          );
+          if (candidate && !selectedDevice) {
+            autoSelected.current.add(candidate.id);
+            selectDevice(candidate);
           }
         }
         listingDevices.current = false;
