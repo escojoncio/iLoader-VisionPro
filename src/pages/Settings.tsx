@@ -34,10 +34,14 @@ type SettingsProps = {
 //   ["ani.xu30.top", "SteX"],
 //   ["anisette.wedotstud.io", "WE. Studio"],
 // ];
-// new windows servers
+// new mac/windows servers
 let anisetteServers = [
-  ["ani.jkcoxson.com", "Jkcoxson"],
-  ["ani2.stikstore.app", "StikStore (secondary)"],
+  ["new.ani.sidestore.io", "SideStore (Mac, .io)"],
+  ["mac-ani.jkcoxson.com", "Jkcoxson (Mac)"],
+  ["ani3.stikstore.app", "StikStore (Mac)"],
+  // works ~50% of the time, and doesn't work with SMS 2FA
+  ["ani.jkcoxson.com", "Jkcoxson (Windows)"],
+  ["ani2.stikstore.app", "StikStore (Windows)"],
 ];
 
 export const Settings = ({
@@ -49,8 +53,8 @@ export const Settings = ({
 }: SettingsProps) => {
   const { t } = useTranslation();
   const [anisetteServer, setAnisetteServer] = useStore<string>(
-    "anisetteServerWin",
-    "ani.jkcoxson.com",
+    "newAnisetteServer",
+    "new.ani.sidestore.io",
   );
 
   const [overrideKeyring, setOverrideKeyring] = useStore<boolean>(
