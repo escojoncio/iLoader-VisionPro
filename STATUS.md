@@ -43,7 +43,7 @@ parsed plist error, not the HTML 503.
   reports `rejected / source=Unnotarized Developer ID`. The DMG IS validly signed
   with `Developer ID Application: Austin Archibald (57G8J46Z2T)`. Austin must
   re-run `xcrun notarytool store-credentials iloader` (apple-id
-  austin@archibalds.tv, team 57G8J46Z2T, app-specific password) before the DMG can
+  <tercero>, team 57G8J46Z2T, app-specific password) before the DMG can
   be notarized, stapled and published. **Do not upload the DMG as-is.**
 - Nothing pushed, nothing uploaded.
 
@@ -83,7 +83,7 @@ Published 2026-09-14: iloader 2.3.5 (notarized) on rebelancap/iloader release `v
 ## Next steps
 
 1. **Restore the notarytool credential**: `xcrun notarytool store-credentials
-   iloader` (Apple ID austin@archibalds.tv, team 57G8J46Z2T, app-specific
+   iloader` (Apple ID <tercero>, team 57G8J46Z2T, app-specific
    password). Then, from `~/dev/iloader`:
    `xcrun notarytool submit build/iloader-visionOS-aarch64.dmg --keychain-profile
    iloader --wait` → `xcrun stapler staple build/iloader-visionOS-aarch64.dmg` →

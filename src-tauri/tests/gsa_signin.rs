@@ -20,7 +20,7 @@ async fn gsa_signin_probe() {
         .with_target(true)
         .init();
 
-    let email = std::env::var("ILOADER_TEST_EMAIL").unwrap_or_else(|_| "austin@archibalds.tv".into());
+    let email = std::env::var("ILOADER_TEST_EMAIL").unwrap_or_else(|_| "test@example.com".into());
     let password = std::env::var("ILOADER_TEST_PASSWORD")
         .unwrap_or_else(|_| "gsa-503-probe-not-a-real-password".into());
     let store_dir = std::env::var("ILOADER_TEST_STORE").unwrap_or_else(|_| "/tmp/iloader-gsa-probe".into());
