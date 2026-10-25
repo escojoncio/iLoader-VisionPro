@@ -25,6 +25,7 @@ Funciona:
 ## 2026-10-25
 - 2026-10-25: `.claude/agents/coder.md`: maxTurns → 70
 - 2026-10-25: `CLAUDE.md` línea 1: regla de cumplir siempre el rol asignado.
+- 2026-10-25: `CLAUDE.md` (Sub-agent setup): coder maxTurns 40 → 70.
 
 ## Notas
 - El ID de equipo de las App IDs registradas por SideStore/iloader tiene la forma `<bundle>.<TEAMID>`.
