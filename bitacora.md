@@ -22,6 +22,9 @@ Funciona:
 - Emparejamiento visionOS (`c5f5e37`, `2333fac`): nombre `rp_pairing_file.plist`; reset durante pair-verify tratado como rechazo.
 - `.github/workflows/build.yml`: compila solo con `[build]` en el commit o *Run workflow*; sin job programado de descargas; publica el instalador de Windows como Release.
 
+## 2026-10-25
+- 2026-10-25: `.claude/agents/coder.md`: maxTurns → 70
+
 ## Notas
 - El ID de equipo de las App IDs registradas por SideStore/iloader tiene la forma `<bundle>.<TEAMID>`.
 - Lo equivalente para instalar desde el propio Vision Pro está en SideStoreRAM-VisionOS-Compatible (parche gemelo de renovación de perfil).
