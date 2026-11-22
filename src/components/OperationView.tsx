@@ -32,7 +32,7 @@ export default ({
 
   const [moreDetailsOpen, setMoreDetailsOpen] = useState(false);
   const [anisetteServer] = useStore<string>(
-    "newAnisetteServer",
+    "anisetteServer3-1",
     "new.ani.sidestore.io",
   );
   const { platform } = usePlatform();

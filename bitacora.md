@@ -34,3 +34,10 @@ Funciona:
 - Sin cambios en isideload/idevice vendorizados: el estado de anisette se reprovisiona solo con -45061 al cambiar de servidor; `reset_anisette_state` sigue disponible.
 - `src-tauri/tests/gsa_signin.rs` y `STATUS.md`: eliminado un correo de tercero.
 - Pendiente: probar login (Mac y Windows) con la build y el emparejamiento Vision Pro.
+
+## 2026-11-22 — anisette (error 503), sin compilar ni probar
+- Lista de servidores (`src/pages/Settings.tsx`): `new.ani.sidestore.io` (defecto, primero), `ani.iloader.app`, `mac-ani.jkcoxson.com`, `ani3.stikstore.app`. Servidores Windows (`ani.jkcoxson.com`, `ani2.stikstore.app`) comentados, como en upstream.
+- Clave del store `newAnisetteServer` → `anisetteServer3-1` en `Settings.tsx`, `AppleID.tsx`, `ErrorContext.tsx`, `components/OperationView.tsx`: descarta servidores guardados antiguos (cambio de comportamiento: los ajustes previos del usuario se pierden).
+- Sin tocar: `account.rs` (client_info ya igual al estado final de upstream tras 7364ae6), isideload vendorizado 0.4.6 (upstream 7364ae6 usa 0.5.2; no rebasado), `vision.rs`, emparejamiento y login Vision Pro. El flag `increased_memory_limit` de d319ce7 ya lo cubre `sideload.rs` (`INCREASED_MEMORY_LIMIT`).
+- Unverified: que 503 desaparezca (puede ser caída del propio servidor); `tsc` no ejecutado (sin node_modules); `ani.iloader.app` sin probar. Revisión adversarial: limpia.
+- Pendiente: compilar con `[build]` y probar login; decidir si rebasar a isideload 0.5.2 (requiere rehacer parches de vendor).
