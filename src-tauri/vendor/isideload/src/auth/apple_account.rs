@@ -564,6 +564,22 @@ impl AppleAccount {
             .await
             .context("Failed to read SMS 2FA error response text")?;
         if !status.is_success() {
+            if Self::is_unlocked_sms_challenge_retry(status.as_u16(), &text) {
+                // Unconfirmed: Apple answers 412 with the challenge state (no serviceErrors)
+                // when the code is not accepted. Treat it like -21669.
+                warn!(
+                    "SMS 2FA code not accepted: http status {}, phone id {}, code length {}, body: {}",
+                    status.as_u16(),
+                    id,
+                    code.chars().count(),
+                    text
+                );
+                self.last_error = "Incorrect Verification Code - Please try again"
+                    .to_string()
+                    .into();
+                return Ok(LoginState::NeedsSMS2FAVerification(id));
+            }
+
             // try to parse as json, if it fails, just bail with the text
             let error = Self::parse_sms_error(text, status.as_u16())?;
 
@@ -625,6 +641,24 @@ impl AppleAccount {
             status,
             text
         );
+    }
+
+    /// 412 whose body is a challenge state (`success == 0`, no `serviceErrors`) and whose
+    /// `securityCode` is not locked/throttled: the submitted code was not accepted.
+    fn is_unlocked_sms_challenge_retry(status: u16, text: &str) -> bool {
+        if status != 412 || Self::parse_sms_service_error(text).is_some() {
+            return false;
+        }
+        let Ok(v) = serde_json::from_str::<serde_json::Value>(text) else {
+            return false;
+        };
+        if v["success"].as_i64() != Some(0) && v["successful"].as_bool() != Some(false) {
+            return false;
+        }
+        let sc = &v["securityCode"];
+        !["tooManyCodesSent", "tooManyCodesValidated", "securityCodeLocked", "securityCodeCooldown"]
+            .iter()
+            .any(|k| sc[*k].as_bool() == Some(true))
     }
 
     fn parse_sms_service_error(text: &str) -> Option<SMSTwoFactorError> {
@@ -1158,5 +1192,34 @@ fn censor_email(email: &str) -> String {
         }
     } else {
         "***".to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::AppleAccount;
+
+    const UNLOCKED: &str = r#"{"success":0,"successful":false,"securityCode":{"length":6,"securityCodeLocked":false,"tooManyCodesValidated":false},"mode":"sms","trustedPhoneNumber":{"id":2}}"#;
+
+    #[test]
+    fn sms_412_unlocked_challenge_is_retry() {
+        assert!(AppleAccount::is_unlocked_sms_challenge_retry(412, UNLOCKED));
+    }
+
+    #[test]
+    fn sms_412_locked_challenge_is_error() {
+        let locked = UNLOCKED.replace(r#""securityCodeLocked":false"#, r#""securityCodeLocked":true"#);
+        assert!(!AppleAccount::is_unlocked_sms_challenge_retry(412, &locked));
+    }
+
+    #[test]
+    fn sms_retry_ignores_other_statuses_and_bodies() {
+        assert!(!AppleAccount::is_unlocked_sms_challenge_retry(400, UNLOCKED));
+        assert!(!AppleAccount::is_unlocked_sms_challenge_retry(412, "not json"));
+        assert!(!AppleAccount::is_unlocked_sms_challenge_retry(412, r#"{"success":1}"#));
+        assert!(!AppleAccount::is_unlocked_sms_challenge_retry(
+            412,
+            r#"{"success":0,"serviceErrors":[{"code":"-21669"}]}"#
+        ));
     }
 }

@@ -41,3 +41,10 @@ Funciona:
 - Sin tocar: `account.rs` (client_info ya igual al estado final de upstream tras 7364ae6), isideload vendorizado 0.4.6 (upstream 7364ae6 usa 0.5.2; no rebasado), `vision.rs`, emparejamiento y login Vision Pro. El flag `increased_memory_limit` de d319ce7 ya lo cubre `sideload.rs` (`INCREASED_MEMORY_LIMIT`).
 - Unverified: que 503 desaparezca (puede ser caída del propio servidor); `tsc` no ejecutado (sin node_modules); `ani.iloader.app` sin probar. Revisión adversarial: limpia.
 - Pendiente: compilar con `[build]` y probar login; decidir si rebasar a isideload 0.5.2 (requiere rehacer parches de vendor).
+
+## 2026-11-22 (2) — 412 al verificar código SMS 2FA, sin compilar ni probar
+- `src-tauri/vendor/isideload/src/auth/apple_account.rs`: `verify_sms_2fa` trata un 412 sin `serviceErrors`, con `success==0`/`successful==false` y sin flags de bloqueo (`securityCodeLocked`, `tooManyCodesSent`, `tooManyCodesValidated`, `securityCodeCooldown`) como código no aceptado: `warn!` con status, id de teléfono, longitud del código y cuerpo; `last_error` fijo y vuelve a `NeedsSMS2FAVerification` sin reenviar SMS. Helper `is_unlocked_sms_challenge_retry` + 3 tests (`mod tests` nuevo).
+- Cambio de comportamiento: antes el 412 abortaba el login; ahora reintenta pidiendo el código (acotado por el timeout de 120 s del callback en `account.rs` y por los bloqueos de Apple; sin contador propio).
+- La UI no muestra `last_error` (el diálogo reaparece sin mensaje de código incorrecto; mejorar en `src/AppleID.tsx`).
+- Unverified: causa raíz del 412 (sin captura de tráfico); si el código era correcto y Apple lo rechaza igualmente, el arreglo solo cambia el síntoma. Hipótesis sin probar: el cliente reqwest no usa cookie store (SideSign/URLSession sí) y falta contraste con isideload upstream 0.5.2. Si el log `SMS 2FA code not accepted` aparece con código correcto, investigar cookies/cabeceras en el POST de verify.
+- `cargo`/`tsc` no ejecutados localmente (sin red); revisión adversarial limpia a mano.
